@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "funcSistema.h"
+#include "jogador.h"
 
 void salvarJogo(Jogador *j, const char *nomeArquivo) {
     FILE *arquivo = fopen(nomeArquivo, "wb");
@@ -62,6 +63,8 @@ void iniciarCombate(Jogador *j, Monstro *m) {
                 printf("Recebeu %d XP e %d moedas de ouro.\n", m->xpDrop, m->ouroDrop);
                 j->xp += m->xpDrop;
                 j->status.ouro += m->ouroDrop;
+                evoluirDeNivel(j);
+                salvarJogo(j, "savegame.dat");
                 break; // Sai do loop de combate
             }
 
@@ -75,23 +78,17 @@ void iniciarCombate(Jogador *j, Monstro *m) {
 
             if (j->status.vidaAtual <= 0) {
                 printf("\nVoce caiu em combate...\n");
+                printf("Mas os solados ouviram seus gritos e lhe resgataram a tempo\n")
+                break;
             }
         } else if (acao == 2) {
             printf("\nVoce foge...\n");
             break; // Sai do combate
+            salvarJogo(j, "savegame.dat");
         } else {
             printf("Acao invalida!\n");
         }
     }
-}
 
-void subirNivel(){
-    printf("Você subiu de nivel!!!\n ");
-    printf("Você tem 3 pontos de atributo para alocar");
     
-
-
-
-
-
 }

@@ -9,4 +9,5 @@ int carregarJogo(Jogador *j, const char *nomeArquivo);
 
 void iniciarCombate(Jogador *j, Monstro *m);
 
+
 #endif

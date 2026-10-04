@@ -21,7 +21,7 @@ void inicializarNovoJogador(Jogador *j, const char *nome) {
 
     j->status.vidaMax = j->atributos.vitalidade * 10;
     j->status.vidaAtual = j->status.vidaMax;
-    j->status.ataque = j->atributos.forca * 1.5;
+    j->status.ataque = j->atributos.forca * 2;
     j->status.defesa = j->atributos.agilidade * 1;
     j->status.ouro = 100;
 }
