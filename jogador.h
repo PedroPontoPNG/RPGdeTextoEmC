@@ -36,5 +36,7 @@ void evoluirDeNivel(Jogador *j);
 void ganharAtributo(Jogador *j, int pontos);
 void alocar(Jogador *j);
 
+void recalcularStatus(Jogador *j);
+
 
 #endif

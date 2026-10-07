@@ -2,6 +2,18 @@
 #include <string.h>
 #include <stdlib.h> 
 #include "jogador.h"
+#include "entrada.h"
+
+
+void recalcularStatus(Jogador *j) {
+    j->status.vidaMax = j->atributos.vitalidade * 10 + (j->nivel - 1) * 5;
+    j->status.ataque  = j->atributos.forca * 2;
+    j->status.defesa  = j->atributos.agilidade;
+    // Equipamento aqui
+
+    if (j->status.vidaAtual > j->status.vidaMax)
+        j->status.vidaAtual = j->status.vidaMax;
+}
 
 void inicializarNovoJogador(Jogador *j, const char *nome) {
     strncpy(j->nome, nome, sizeof(j->nome) - 1);
@@ -19,11 +31,9 @@ void inicializarNovoJogador(Jogador *j, const char *nome) {
     j->atributos.carisma = 1;
     j->atributos.sorte = 1;
 
-    j->status.vidaMax = j->atributos.vitalidade * 10;
-    j->status.vidaAtual = j->status.vidaMax;
-    j->status.ataque = j->atributos.forca * 2;
-    j->status.defesa = j->atributos.agilidade * 1;
     j->status.ouro = 100;
+    recalcularStatus(j);
+    j->status.vidaAtual = j->status.vidaMax;
 }
 
 typedef struct {
@@ -86,25 +96,6 @@ int atacar(Jogador *atacante) {
     return dano_final;
 }
 
-// Aumentar Nivel e atributos
-void evoluirDeNivel(Jogador *j) {
-    if (j->xp >= j->xpProximoNivel) {
-        j->nivel++;
-        j->xp -= j->xpProximoNivel; // Mantém o XP excedente
-        j->xpProximoNivel = (int)(j->xpProximoNivel * 1.5);
-
-        printf("\n*** Subiu de nivel!! ***\n");
-        printf("Você alcançou o Nível %d!\n", j->nivel);
-
-        // aumenta a vida máxima
-        j->status.vidaMax += 5; 
-        j->status.vidaAtual = j->status.vidaMax;
-
-        // Ganha 3 pontos de atributo para ser alocado
-        ganharAtributo(j, 3);
-    }
-}
-
 // Ganha pontos de atributo
 void ganharAtributo(Jogador *j, int pontos) {
     j->pontosAtributo += pontos;
@@ -112,49 +103,62 @@ void ganharAtributo(Jogador *j, int pontos) {
     alocar(j);
 }
 
+// Aumentar Nivel e atributos
+void evoluirDeNivel(Jogador *j) {
+    while (j->xp >= j->xpProximoNivel) {
+        j->xp -= j->xpProximoNivel; // Mantém o XP excedente
+        j->nivel++;
+        j->xpProximoNivel = (int)(j->xpProximoNivel * 1.5);
+
+        printf("\n*** Subiu de nivel!! ***\n");
+        printf("Você alcançou o Nível %d!\n", j->nivel);
+
+        recalcularStatus(j);
+        j->status.vidaAtual = j->status.vidaMax;
+
+        // Ganha 3 pontos de atributo para ser alocado
+        ganharAtributo(j, 3);
+    }
+}
+
 // Alocar atributos
 void alocar(Jogador *j) {
-    int escolha;
-
     while (j->pontosAtributo > 0) {
         printf("\n--- ALOCAÇÃO DE ATRIBUTOS ---\n");
         printf("Pontos disponíveis: %d\n", j->pontosAtributo);
-        printf("1. Vitalidade (+ HP Máximo)  (Atual: %d)\n", j->atributos.vitalidade);
-        printf("2. Força (+ Dano Físico)     (Atual: %d)\n", j->atributos.forca);
-        printf("3. Inteligência (+ Mana)     (Atual: %d)\n", j->atributos.inteligencia);
-        printf("4. Agilidade (+ Turno)(Atual: %d)\n", j->atributos.agilidade);
-        printf("5. Carisma (Comércio/NPCs)   (Atual: %d)\n", j->atributos.carisma);
-        printf("6. Sorte (Crítico/Loot)      (Atual: %d)\n", j->atributos.sorte);
-        printf("Escolha onde investir 1 ponto: ");
-        
-        if (scanf("%d", &escolha) != 1) {
-            while (getchar() != '\n');
-            continue;
-        }
-        getchar();
+        printf("1. Vitalidade (+ HP Máximo) (Atual: %d)\n", j->atributos.vitalidade);
+        printf("2. Força (+ Dano Físico) (Atual: %d)\n", j->atributos.forca);
+        printf("3. Inteligência (+ Mana) (Atual: %d)\n", j->atributos.inteligencia);
+        printf("4. Agilidade (+ Defesa) (Atual: %d)\n", j->atributos.agilidade);
+        printf("5. Carisma (Comércio/NPCs) (Atual: %d)\n", j->atributos.carisma);
+        printf("6. Sorte (Crítico/Loot) (Atual: %d)\n", j->atributos.sorte);
+
+        int escolha = lerInt("Escolha onde investir 1 ponto: ");
 
         switch (escolha) {
-            case 1: 
-                j->atributos.vitalidade++; 
-                j->status.vidaMax += 10; // Atualiza a vida
-                j->status.vidaAtual += 10;
+            case 1:
+                j->atributos.vitalidade++;
+                recalcularStatus(j);
+                j->status.vidaAtual += 10;   // ganha o HP novo na hora
                 break;
-            case 2: 
-                j->atributos.forca++; 
-                j->status.ataque = j->atributos.forca * 2; // Recalcula o ataque base
+            case 2:
+                j->atributos.forca++;
+                recalcularStatus(j);
                 break;
-            case 3: j->atributos.inteligencia++; break;
-            case 4: 
-                j->atributos.agilidade++; 
-                j->status.defesa = j->atributos.agilidade * 1; // Recalcula a defesa
+            case 3: j->atributos.inteligencia++; 
                 break;
-            case 5: j->atributos.carisma++; break;
-            case 6: j->atributos.sorte++; break;
-            default: 
-                printf("Opção inválida!\n"); 
-                continue; // Volta ao início do loop sem gastar o ponto
+            case 4:
+                j->atributos.agilidade++;
+                recalcularStatus(j);
+                break;
+            case 5: j->atributos.carisma++; 
+                break;
+            case 6: j->atributos.sorte++; 
+                break;
+            default:
+                printf("Opção inválida!\n");
+                continue; // Volta ao início do loop sem gastar ponto
         }
-        
         j->pontosAtributo--; // Gasta 1 ponto com sucesso
     }
     printf("\nTodos os pontos foram alocados com sucesso!\n");

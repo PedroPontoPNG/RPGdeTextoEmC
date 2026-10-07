@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "cidades.h"
+#include "entrada.h"
 
 EstadoJogo rodarMenuCidade(Jogador *j) {
     int opcao = -1;
@@ -16,11 +17,7 @@ EstadoJogo rodarMenuCidade(Jogador *j) {
         printf("====================================\n");
         printf("Escolha sua ação: ");
 
-        if (scanf("%d", &opcao) != 1) {
-            while (getchar() != '\n');
-            continue;
-        }
-        getchar();
+        opcao = lerInt("Escolha sua ação: ");
 
         switch (opcao) {
             case 1:
@@ -67,6 +64,6 @@ void visitarTaverna(Jogador *j) {
 }
 
 void visitarLoja(Jogador *j) {
-    int opcao = -1;
-    printf("Em construção");
+    (void)j;  
+    printf("\nO ferreiro ainda está arrumando a oficina. Volte em breve\n");
 }
