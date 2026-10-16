@@ -64,7 +64,7 @@ int main() {
             case ESTADO_FLORESTA:
                 printf("\nVocê adentra a floresta escura...\n");
                 Monstro inimigo;
-                gerarMonstroTutorial(&inimigo);
+                gerarMonstroAleatorio(&inimigo, AREA_FLORESTA);
                 iniciarCombate(&player1, &inimigo);
                 estadoAtual = ESTADO_CIDADE;
                 break;
