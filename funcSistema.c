@@ -30,8 +30,9 @@ int carregarJogo(Jogador *j, const char *nomeArquivo) {
         fclose(arquivo);
         return 0;
     }
-    fclose(arquivo);
+fclose(arquivo);
     *j = tmp;
+    recalcularStatus(j);   // reaplica os bônus da tabela de itens
     return 1;
 }
 

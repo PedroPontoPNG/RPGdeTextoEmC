@@ -5,7 +5,7 @@
 #include "monstro.h"
 
 #define ARQUIVO_SAVE "savegame.dat"
-#define SAVE_VERSAO  1
+#define SAVE_VERSAO  2
 
 void salvarJogo(Jogador *j, const char *nomeArquivo);
 int carregarJogo(Jogador *j, const char *nomeArquivo);

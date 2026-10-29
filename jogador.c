@@ -6,10 +6,18 @@
 
 
 void recalcularStatus(Jogador *j) {
+    // Soma os bônus de tudo que está equipado
+    int ataqueItens = 0, defesaItens = 0;
+    for (int s = 0; s < SLOT_TOTAL; s++) {
+        const Equipamento *item = obterItem(j->equipados[s]);
+        if (item == NULL) continue;
+        ataqueItens += item->ataque;
+        defesaItens += item->defesa;
+    }
+
     j->status.vidaMax = j->atributos.vitalidade * 10 + (j->nivel - 1) * 5;
-    j->status.ataque  = j->atributos.forca * 2;
-    j->status.defesa  = j->atributos.agilidade;
-    // Equipamento aqui
+    j->status.ataque  = j->atributos.forca * 2 + ataqueItens;
+    j->status.defesa  = j->atributos.agilidade + defesaItens;
 
     if (j->status.vidaAtual > j->status.vidaMax)
         j->status.vidaAtual = j->status.vidaMax;
@@ -32,16 +40,13 @@ void inicializarNovoJogador(Jogador *j, const char *nome) {
     j->atributos.sorte = 1;
 
     j->status.ouro = 100;
+
+    for (int s = 0; s < SLOT_TOTAL; s++) j->equipados[s] = ITEM_NENHUM;
+    j->equipados[SLOT_ARMA] = ITEM_NENHUM;
+
     recalcularStatus(j);
     j->status.vidaAtual = j->status.vidaMax;
 }
-
-typedef struct {
-    char nome[50];
-    int bonusAtaque;
-    int precisao;
-    int peso;
-} Equipamento;
 
 void exibirStatus(Jogador *j) {
     printf("\n--- STATUS ---\n");
@@ -50,9 +55,14 @@ void exibirStatus(Jogador *j) {
            j->status.vidaAtual, j->status.vidaMax, j->status.ataque, j->status.defesa, j->status.ouro);
     printf("-----------------------\n");
 
-    printf("Itens equipados:\n Capacete: \n Peitoral: \n Calças: \n Botas:\n");
+    printf("Itens equipados (peso total: %d):\n", pesoEquipado(j));
+    for (int sl = 0; sl < SLOT_TOTAL; sl++) {
+        const Equipamento *item = obterItem(j->equipados[sl]);
+        if (sl == SLOT_ANEL1) printf("\n");   // separa os acessórios
+        printf(" %s: %s\n", nomeSlot((SlotEquip)sl), item ? item->nome : "-");
+    }
+    printf("\n");
 
-    printf("\n Acessorios: \n Anel 1: \n Anel 2: \n Brincos: \n Amuleto: \n");
 
     printf("Vitalidade:%d\nForça:%d\nInteligência:%d\nAgilidade:%d\nCarisma:%d\nSorte:%d",
          j->atributos.vitalidade, j->atributos.forca,  j->atributos.inteligencia, j->atributos.agilidade, 
@@ -164,4 +174,65 @@ void alocar(Jogador *j) {
     printf("\nTodos os pontos foram alocados com sucesso!\n");
 }
 
+// ---------- Equipamentos ----------
 
+// Soma o peso de tudo que está equipado (sem uso ainda)
+int pesoEquipado(const Jogador *j) {
+    int total = 0;
+    for (int s = 0; s < SLOT_TOTAL; s++) {
+        const Equipamento *item = obterItem(j->equipados[s]);
+        if (item != NULL) total += item->peso;
+    }
+    return total;
+}
+
+// Equipa o item no slot dele, se o jogador tiver os status minimos.
+// Se o slot já estiver ocupado, o item antigo é substituído.
+// Por enquanto o item some, não há bolsa/inventario ainda
+int equiparItem(Jogador *j, int id) {
+    const Equipamento *item = obterItem(id);
+    if (item == NULL) {
+        printf("Item inexistente!\n");
+        return 0;
+    }
+
+    if (j->atributos.forca < item->forcaMin) {
+        printf("Você precisa de Força %d para usar %s (atual: %d).\n",
+               item->forcaMin, item->nome, j->atributos.forca);
+        return 0;
+    }
+    if (j->atributos.agilidade < item->agilidadeMin) {
+        printf("Você precisa de Agilidade %d para usar %s (atual: %d).\n",
+               item->agilidadeMin, item->nome, j->atributos.agilidade);
+        return 0;
+    }
+
+    // Anéis: usa o segundo slot se o primeiro estiver ocupado e o segundo livre
+    SlotEquip destino = item->slot;
+    if (destino == SLOT_ANEL1 &&
+        j->equipados[SLOT_ANEL1] != ITEM_NENHUM &&
+        j->equipados[SLOT_ANEL2] == ITEM_NENHUM) {
+        destino = SLOT_ANEL2;
+    }
+
+    const Equipamento *antigo = obterItem(j->equipados[destino]);
+    j->equipados[destino] = id;
+    recalcularStatus(j);
+
+    if (antigo != NULL)
+        printf("%s substituiu %s (%s).\n", item->nome, antigo->nome, nomeSlot(destino));
+    else
+        printf("%s equipado (%s).\n", item->nome, nomeSlot(destino));
+    return 1;
+}
+
+// Esvazia o slot e devolve o ID que estava nele (ITEM_NENHUM se já estava vazio).
+// Por enquanto o item some, não há bolsa/inventario ainda
+int desequiparItem(Jogador *j, SlotEquip slot) {
+    if (slot < 0 || slot >= SLOT_TOTAL) return ITEM_NENHUM;
+
+    int removido = j->equipados[slot];
+    j->equipados[slot] = ITEM_NENHUM;
+    recalcularStatus(j);
+    return removido;
+}

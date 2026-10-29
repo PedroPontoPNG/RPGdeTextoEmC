@@ -1,6 +1,8 @@
 #ifndef JOGADOR_H
 #define JOGADOR_H
 
+#include "equipamentos.h"
+
 typedef struct {
     int vitalidade;
     int forca;
@@ -26,6 +28,7 @@ typedef struct {
     int pontosAtributo;
     Atributos atributos;
     Status status;
+    int equipados[SLOT_TOTAL];   // ID (IdItem) de cada slot; ITEM_NENHUM = vazio
 } Jogador;
 
 void inicializarNovoJogador(Jogador *j, const char *nome);
@@ -37,6 +40,11 @@ void ganharAtributo(Jogador *j, int pontos);
 void alocar(Jogador *j);
 
 void recalcularStatus(Jogador *j);
+
+// Equipamentos
+int equiparItem(Jogador *j, int id);                 // 1 = equipou, 0 = não pôde
+int desequiparItem(Jogador *j, SlotEquip slot);      // devolve o ID removido (ITEM_NENHUM se vazio)
+int pesoEquipado(const Jogador *j);
 
 
 #endif
