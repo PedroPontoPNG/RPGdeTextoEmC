@@ -35,6 +35,12 @@ typedef enum {
     ITEM_ANEL_BRONZE,
     ITEM_BRINCOS_PRATA,
     ITEM_AMULETO_OSSO,
+    // Itens que não são equipamento (descritos em item.c)
+    ITEM_POCAO_CURA_PEQUENA,
+    ITEM_ERVA_MEDICINAL,
+    ITEM_COURO_LOBO,
+    ITEM_MINERIO_FERRO,
+    ITEM_CHAVE_ENFERRUJADA,
     ITEM_TOTAL
 } IdItem;
 
@@ -50,7 +56,8 @@ typedef struct {
     int agilidadeMin;
 } Equipamento;
 
-// Devolve os dados do item, ou NULL se o ID for ITEM_NENHUM ou inválido
+// Devolve os dados do equipamento, ou NULL se o ID for ITEM_NENHUM, inválido
+// ou de um item que não é equipamento (poção, material, item de missão...)
 const Equipamento *obterItem(int id);
 
 // Nome de exibição do slot (ex.: "Capacete")

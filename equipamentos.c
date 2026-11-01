@@ -35,6 +35,7 @@ static const char *nomesSlots[SLOT_TOTAL] = {
 
 const Equipamento *obterItem(int id) {
     if (id <= ITEM_NENHUM || id >= ITEM_TOTAL) return NULL;
+    if (tabelaItens[id].nome == NULL) return NULL;   // não é equipamento
     return &tabelaItens[id];
 }
 

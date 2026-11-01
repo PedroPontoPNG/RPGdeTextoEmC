@@ -24,6 +24,8 @@ void recalcularStatus(Jogador *j) {
 }
 
 void inicializarNovoJogador(Jogador *j, const char *nome) {
+    memset(j, 0, sizeof *j);   // zera tudo (inclusive vidaAtual, lida por recalcularStatus)
+
     strncpy(j->nome, nome, sizeof(j->nome) - 1);
     j->nome[sizeof(j->nome) - 1] = '\0';
 
@@ -42,7 +44,7 @@ void inicializarNovoJogador(Jogador *j, const char *nome) {
     j->status.ouro = 100;
 
     for (int s = 0; s < SLOT_TOTAL; s++) j->equipados[s] = ITEM_NENHUM;
-    j->equipados[SLOT_ARMA] = ITEM_NENHUM;
+    inicializarInventario(&j->inventario);
 
     recalcularStatus(j);
     j->status.vidaAtual = j->status.vidaMax;
@@ -186,13 +188,17 @@ int pesoEquipado(const Jogador *j) {
     return total;
 }
 
-// Equipa o item no slot dele, se o jogador tiver os status minimos.
-// Se o slot já estiver ocupado, o item antigo é substituído.
-// Por enquanto o item some, não há bolsa/inventario ainda
+// Equipa o item no slot dele, se estiver na bolsa e o jogador tiver os status minimos.
+// Se o slot já estiver ocupado, o item antigo volta para a bolsa.
 int equiparItem(Jogador *j, int id) {
     const Equipamento *item = obterItem(id);
     if (item == NULL) {
         printf("Item inexistente!\n");
+        return 0;
+    }
+
+    if (contarItem(&j->inventario, id) < 1) {
+        printf("Você não tem %s no inventário.\n", item->nome);
         return 0;
     }
 
@@ -216,6 +222,13 @@ int equiparItem(Jogador *j, int id) {
     }
 
     const Equipamento *antigo = obterItem(j->equipados[destino]);
+    int idAntigo = j->equipados[destino];
+
+    // Tira o novo da bolsa ANTES de devolver o antigo: equipamentos ocupam
+    // 1 espaço cada, então o espaço liberado sempre comporta o item antigo.
+    removerItem(&j->inventario, id, 1);
+    if (idAntigo != ITEM_NENHUM) adicionarItem(&j->inventario, idAntigo, 1);
+
     j->equipados[destino] = id;
     recalcularStatus(j);
 
@@ -226,12 +239,20 @@ int equiparItem(Jogador *j, int id) {
     return 1;
 }
 
-// Esvazia o slot e devolve o ID que estava nele (ITEM_NENHUM se já estava vazio).
-// Por enquanto o item some, não há bolsa/inventario ainda
+// Esvazia o slot e guarda o item na bolsa. Devolve o ID movido
+// (ITEM_NENHUM se o slot já estava vazio ou se a bolsa está cheia).
 int desequiparItem(Jogador *j, SlotEquip slot) {
     if (slot < 0 || slot >= SLOT_TOTAL) return ITEM_NENHUM;
 
     int removido = j->equipados[slot];
+    if (removido == ITEM_NENHUM) return ITEM_NENHUM;
+
+    if (!cabeNoInventario(&j->inventario, removido, 1)) {
+        printf("Inventário cheio! Libere espaço para desequipar.\n");
+        return ITEM_NENHUM;
+    }
+
+    adicionarItem(&j->inventario, removido, 1);
     j->equipados[slot] = ITEM_NENHUM;
     recalcularStatus(j);
     return removido;

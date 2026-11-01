@@ -3,6 +3,23 @@
 #include "jogador.h"
 #include "entrada.h"
 
+// Confere os itens de um save: equipamentos nos slots certos e bolsa válida.
+// Protege contra save corrompido ou com IDs de itens que não existem mais.
+static int itensDoSaveValidos(Jogador *j) {
+    for (int s = 0; s < SLOT_TOTAL; s++) {
+        int id = j->equipados[s];
+        if (id == ITEM_NENHUM) continue;
+
+        const Equipamento *item = obterItem(id);
+        if (item == NULL) return 0;
+
+        int slotCerto = (item->slot == (SlotEquip)s) ||
+                        (item->slot == SLOT_ANEL1 && s == SLOT_ANEL2);
+        if (!slotCerto) return 0;
+    }
+    return validarInventario(&j->inventario);
+}
+
 void salvarJogo(Jogador *j, const char *nomeArquivo) {
     FILE *arquivo = fopen(nomeArquivo, "wb");
     if (arquivo == NULL) {
@@ -30,7 +47,10 @@ int carregarJogo(Jogador *j, const char *nomeArquivo) {
         fclose(arquivo);
         return 0;
     }
-fclose(arquivo);
+    fclose(arquivo);
+
+    if (!itensDoSaveValidos(&tmp)) return 0;
+
     *j = tmp;
     recalcularStatus(j);   // reaplica os bônus da tabela de itens
     return 1;

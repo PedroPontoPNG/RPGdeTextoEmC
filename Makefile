@@ -1,6 +1,6 @@
 CC      = gcc
 CFLAGS  = -Wall -Wextra
-SRC     = main.c cidades.c funcSistema.c jogador.c monstro.c entrada.c equipamentos.c
+SRC     = main.c cidades.c funcSistema.c jogador.c monstro.c entrada.c equipamentos.c item.c inventario.c
 
 jogo: $(SRC)
 	$(CC) $(CFLAGS) $(SRC) -o jogo

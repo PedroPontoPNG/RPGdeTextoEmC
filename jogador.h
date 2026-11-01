@@ -2,6 +2,7 @@
 #define JOGADOR_H
 
 #include "equipamentos.h"
+#include "inventario.h"
 
 typedef struct {
     int vitalidade;
@@ -29,6 +30,7 @@ typedef struct {
     Atributos atributos;
     Status status;
     int equipados[SLOT_TOTAL];   // ID (IdItem) de cada slot; ITEM_NENHUM = vazio
+    Inventario inventario;       // bolsa: itens guardados (não equipados)
 } Jogador;
 
 void inicializarNovoJogador(Jogador *j, const char *nome);
@@ -42,8 +44,11 @@ void alocar(Jogador *j);
 void recalcularStatus(Jogador *j);
 
 // Equipamentos
+// O item sai da bolsa ao equipar; o que estava no slot volta para a bolsa.
 int equiparItem(Jogador *j, int id);                 // 1 = equipou, 0 = não pôde
-int desequiparItem(Jogador *j, SlotEquip slot);      // devolve o ID removido (ITEM_NENHUM se vazio)
+// Move o item do slot para a bolsa. Devolve o ID movido, ou ITEM_NENHUM se o
+// slot estava vazio ou a bolsa estava cheia.
+int desequiparItem(Jogador *j, SlotEquip slot);
 int pesoEquipado(const Jogador *j);
 
 
